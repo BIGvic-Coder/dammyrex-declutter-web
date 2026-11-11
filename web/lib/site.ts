@@ -18,9 +18,12 @@ export const SITE_URL = (
 export const SITE_DESCRIPTION =
   'Neatly used fridges, freezers, gas cookers, fans, ACs, beds, chairs and tables in Nigeria. Inspect in person before you pay. Chat with us on WhatsApp.';
 
-/** Server-only: read in server components and pass down as a prop where needed. */
+/** Business WhatsApp number (public: it is shown on every page). Used when no env var is set. */
+const DEFAULT_WHATSAPP = '2348101295489';
+
 export function whatsappNumber(): string {
-  return (process.env.WHATSAPP_NUMBER ?? '').replace(/\D/g, '');
+  const fromEnv = (process.env.WHATSAPP_NUMBER || process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || '').replace(/\D/g, '');
+  return fromEnv || DEFAULT_WHATSAPP;
 }
 
 export function whatsappLink(text: string, number = whatsappNumber()): string {
