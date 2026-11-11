@@ -1,0 +1,127 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum AdminRole {
+  OWNER
+  STAFF
+}
+
+enum ItemCondition {
+  LIKE_NEW
+  GOOD
+  FAIR
+}
+
+enum ItemStatus {
+  PENDING
+  AVAILABLE
+  RESERVED
+  SOLD
+  REJECTED
+}
+
+enum InspectionStatus {
+  REQUESTED
+  CONFIRMED
+  DONE
+  CANCELLED
+}
+
+model Admin {
+  id           String    @id @default(cuid())
+  name         String
+  email        String    @unique
+  passwordHash String
+  role         AdminRole @default(STAFF)
+  createdAt    DateTime  @default(now())
+}
+
+model Seller {
+  id        String   @id @default(cuid())
+  name      String
+  /// Normalised to 234XXXXXXXXXX. Never exposed publicly.
+  phone     String   @unique
+  area      String
+  createdAt DateTime @default(now())
+  items     Item[]
+}
+
+model Category {
+  id    String @id @default(cuid())
+  name  String @unique
+  slug  String @unique
+  icon  String
+  items Item[]
+}
+
+model Item {
+  id             String        @id @default(cuid())
+  title          String
+  description    String
+  categoryId     String
+  category       Category      @relation(fields: [categoryId], references: [id])
+  sellerId       String
+  seller         Seller        @relation(fields: [sellerId], references: [id])
+  /// Price in naira (whole number)
+  price          Int
+  condition      ItemCondition
+  area           String
+  /// Pickup/inspection address. Never exposed publicly.
+  addressPrivate String
+  status         ItemStatus    @default(PENDING)
+  featured       Boolean       @default(false)
+  soldAt         DateTime?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  images         ItemImage[]
+  inspections    Inspection[]
+
+  @@index([status, categoryId, createdAt])
+  @@index([price])
+  @@index([sellerId])
+}
+
+model ItemImage {
+  id       String @id @default(cuid())
+  itemId   String
+  item     Item   @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  url      String
+  /// 0-7 (max 8 images per item, enforced in the API)
+  position Int
+
+  @@unique([itemId, position])
+}
+
+model Inspection {
+  id         String           @id @default(cuid())
+  itemId     String
+  item       Item             @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  buyerName  String
+  buyerPhone String
+  slotAt     DateTime
+  status     InspectionStatus @default(REQUESTED)
+  note       String?
+  createdAt  DateTime         @default(now())
+
+  @@index([status, slotAt])
+  @@index([itemId])
+}
+
+model Review {
+  id        String   @id @default(cuid())
+  name      String
+  text      String
+  /// 1-5
+  rating    Int
+  approved  Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([approved, createdAt])
+}

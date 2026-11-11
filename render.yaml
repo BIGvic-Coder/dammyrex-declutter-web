@@ -1,0 +1,35 @@
+# Render Blueprint for the DammyRex API.
+# Render dashboard → New → Blueprint → pick this repo. Values marked sync:false are asked for once.
+services:
+  - type: web
+    name: dammyrex-api
+    runtime: node
+    plan: free
+    region: frankfurt # same AWS region as the Neon database
+    rootDir: api
+    # --include=dev: the Nest CLI/TypeScript/Prisma CLI are devDependencies but needed to build.
+    # Migrations run in the build because the free plan has no pre-deploy step.
+    buildCommand: npm ci --include=dev && npm run build && npx prisma migrate deploy
+    startCommand: npm start
+    healthCheckPath: /ping
+    autoDeploy: true
+    envVars:
+      - key: NODE_VERSION
+        value: 20.19.5
+      - key: DATABASE_URL
+        sync: false
+      - key: DIRECT_URL
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
+      - key: WHATSAPP_NUMBER
+        sync: false
+      # Set to the Vercel URL once the website is deployed, e.g. https://dammyrex-declutter.vercel.app
+      - key: WEB_ORIGIN
+        sync: false
