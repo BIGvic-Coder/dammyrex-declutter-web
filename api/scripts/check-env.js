@@ -51,7 +51,7 @@ else if (/\/$/.test(process.env.WEB_ORIGIN.trim())) warn.push('WEB_ORIGIN must n
 for (const w of warn) console.warn(`[check-env] WARNING: ${w}`);
 if (problems.length) {
   for (const p of problems) console.error(`[check-env] ERROR: ${p}`);
-  console.error('[check-env] Fix the values above in Render > dammyrex-api > Environment, then Manual Deploy.');
+  console.error('[check-env] Fix the values above in Render > dammyrex-declutter-web > Environment, then Manual Deploy.');
   process.exit(1);
 }
 console.log('[check-env] Environment looks good.');

@@ -65,6 +65,33 @@ Check the API is up and connected to the database: <http://localhost:4000/health
 
 `.env` files are git-ignored. Never commit them.
 
+## Live deployment
+
+| What | Address | Host |
+| --- | --- | --- |
+| Website | <https://dammyrex-declutter.vercel.app> | Vercel (project `dammyrex-declutter`, root directory `web`, region `fra1`) |
+| Admin dashboard | <https://dammyrex-declutter.vercel.app/admin> | Vercel |
+| API | <https://dammyrex-declutter-web.onrender.com> | Render free plan, Frankfurt (service `dammyrex-declutter-web`, root directory `api`) |
+| API health | [`/ping`](https://dammyrex-declutter-web.onrender.com/ping) (no DB) · [`/health`](https://dammyrex-declutter-web.onrender.com/health) (with DB) | |
+| Database | Neon PostgreSQL, AWS Frankfurt | Neon |
+| Photos | Cloudinary | Cloudinary |
+
+- Every push to `main` on GitHub redeploys both the website and the API automatically.
+- Render build command: `npm install && npx prisma generate && npx prisma migrate deploy && npm run build`;
+  start command: `node dist/main.js`. The Render service was created by hand, so `render.yaml` is a
+  reference/blueprint for recreating it, not what the live service reads.
+- Keep the free API awake with an [UptimeRobot](https://uptimerobot.com) HTTP(s) monitor on
+  `https://dammyrex-declutter-web.onrender.com/ping` every 5 minutes (otherwise it sleeps after 15 minutes idle and
+  the next visitor waits ~1 minute).
+- Production env vars:
+  - Render: `DATABASE_URL`, `DIRECT_URL`, `JWT_SECRET`, `CLOUDINARY_*`, `WHATSAPP_NUMBER`,
+    `WEB_ORIGIN=https://dammyrex-declutter.vercel.app`
+  - Vercel: `NEXT_PUBLIC_API_URL=https://dammyrex-declutter-web.onrender.com`. Optional: `NEXT_PUBLIC_SITE_URL`
+    (falls back to the Vercel production domain) and `WHATSAPP_NUMBER` (falls back to the default in
+    `web/lib/site.ts`). `NEXT_PUBLIC_*` values are baked in at build time, so redeploy after changing them.
+- Rate limiting on Render uses Cloudflare's `CF-Connecting-IP` header (see
+  `api/src/common/client-ip-throttler.guard.ts`).
+
 ## Before going live
 
 1. **Host the API in the same region as the database** (Neon is in AWS Frankfurt, so pick Frankfurt / `eu-central`

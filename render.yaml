@@ -1,8 +1,10 @@
 # Render Blueprint for the DammyRex API.
 # Render dashboard → New → Blueprint → pick this repo. Values marked sync:false are asked for once.
+# NOTE: the live service (https://dammyrex-declutter-web.onrender.com) was created by hand in the
+# dashboard, so it does NOT read this file. Keep it as the recipe for recreating the service.
 services:
   - type: web
-    name: dammyrex-api
+    name: dammyrex-declutter-web
     runtime: node
     plan: free
     region: frankfurt # same AWS region as the Neon database
