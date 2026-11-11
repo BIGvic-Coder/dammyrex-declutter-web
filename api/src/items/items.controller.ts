@@ -11,7 +11,8 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { FilesInterceptor } from '@nestjs/platform-express';
-import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
+import { Throttle } from '@nestjs/throttler';
+import { ClientIpThrottlerGuard } from '../common/client-ip-throttler.guard';
 import { ListItemsQuery } from './dto/list-items.query';
 import { SubmitItemDto } from './dto/submit-item.dto';
 import { ItemsService, MAX_IMAGES } from './items.service';
@@ -34,7 +35,7 @@ export class ItemsController {
   }
 
   @Post('submit')
-  @UseGuards(ThrottlerGuard)
+  @UseGuards(ClientIpThrottlerGuard)
   @Throttle({ default: { limit: 5, ttl: 60 * 60 * 1000 } }) // 5 submissions per hour per IP
   @UseInterceptors(
     FilesInterceptor('images', MAX_IMAGES, {

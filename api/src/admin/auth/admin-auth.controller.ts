@@ -1,6 +1,7 @@
 import { Body, Controller, HttpCode, Post, UnauthorizedException, UseGuards } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
+import { Throttle } from '@nestjs/throttler';
+import { ClientIpThrottlerGuard } from '../../common/client-ip-throttler.guard';
 import { Transform } from 'class-transformer';
 import { IsEmail, IsString, Length } from 'class-validator';
 import * as bcrypt from 'bcryptjs';
@@ -28,7 +29,7 @@ export class AdminAuthController {
 
   @Post('login')
   @HttpCode(200)
-  @UseGuards(ThrottlerGuard)
+  @UseGuards(ClientIpThrottlerGuard)
   @Throttle({ default: { limit: 5, ttl: 60 * 1000 } }) // 5 attempts per minute per IP
   async login(@Body() dto: LoginDto) {
     const admin = await this.prisma.admin.findUnique({ where: { email: dto.email } });
