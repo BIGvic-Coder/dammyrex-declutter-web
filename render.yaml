@@ -9,7 +9,7 @@ services:
     rootDir: api
     # --include=dev: the Nest CLI/TypeScript/Prisma CLI are devDependencies but needed to build.
     # Migrations run in the build because the free plan has no pre-deploy step.
-    buildCommand: npm ci --include=dev && npm run build && npx prisma migrate deploy
+    buildCommand: npm ci --include=dev && npm run build && node scripts/check-env.js && npx prisma migrate deploy
     startCommand: npm start
     healthCheckPath: /ping
     autoDeploy: true

@@ -5,6 +5,12 @@ import { PrismaService } from './prisma/prisma.service';
 export class HealthController {
   constructor(private readonly prisma: PrismaService) {}
 
+  /** Friendly root so opening the API address in a browser doesn't look broken. */
+  @Get()
+  root() {
+    return { name: 'DammyRex Declutter API', ok: true, health: '/health' };
+  }
+
   /** Full check: API + database. Use for manual checks. */
   @Get('health')
   async check() {
