@@ -1,4 +1,5 @@
 import Image from 'next/image';
+import type { ReactNode } from 'react';
 import Link from 'next/link';
 import { CONDITION_LABEL, formatNaira } from '@/lib/format';
 import type { Item } from '@/lib/types';
@@ -46,14 +47,32 @@ export function ItemCard({ item, priority = false }: { item: Item; priority?: bo
   );
 }
 
-export function ItemGrid({ items, priorityCount = 0 }: { items: Item[]; priorityCount?: number }) {
-  return (
-    <ul className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4">
-      {items.map((item, i) => (
-        <li key={item.id} className="flex">
-          <ItemCard item={item} priority={i < priorityCount} />
-        </li>
-      ))}
-    </ul>
-  );
+/**
+ * Item grid. Cards fade up in a short stagger when results change (CSS only, switched off
+ * for reduced-motion users). `insert` places one extra card (e.g. a Sponsored ad) after `at` items.
+ */
+export function ItemGrid({
+  items,
+  priorityCount = 0,
+  insert,
+}: {
+  items: Item[];
+  priorityCount?: number;
+  insert?: { at: number; node: ReactNode };
+}) {
+  const cells: ReactNode[] = items.map((item, i) => (
+    <li key={item.id} className="fade-up flex" style={{ animationDelay: `${Math.min(i, 8) * 35}ms` }}>
+      <ItemCard item={item} priority={i < priorityCount} />
+    </li>
+  ));
+  if (insert) {
+    cells.splice(
+      Math.min(insert.at, cells.length),
+      0,
+      <li key="inserted" className="fade-up flex" style={{ animationDelay: `${Math.min(insert.at, 8) * 35}ms` }}>
+        {insert.node}
+      </li>,
+    );
+  }
+  return <ul className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4">{cells}</ul>;
 }

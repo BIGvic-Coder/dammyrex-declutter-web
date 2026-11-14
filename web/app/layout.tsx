@@ -1,9 +1,14 @@
 import type { Metadata, Viewport } from 'next';
+import { Poppins } from 'next/font/google';
 import { SiteFooter } from '@/components/SiteFooter';
 import { SiteHeader } from '@/components/SiteHeader';
+import { ADSENSE_CLIENT } from '@/lib/adsense';
 import { DEFAULT_OG_IMAGE } from '@/lib/seo';
 import { SITE_DESCRIPTION, SITE_NAME, SITE_URL, whatsappNumber } from '@/lib/site';
 import './globals.css';
+
+/** Bold display font for the brand name and headings only (one weight, self-hosted by Next). */
+const display = Poppins({ subsets: ['latin'], weight: '800', display: 'swap', variable: '--font-poppins' });
 
 const DEFAULT_TITLE = `${SITE_NAME} | Neatly used home items in Nigeria`;
 
@@ -24,10 +29,12 @@ export const metadata: Metadata = {
   twitter: { card: 'summary_large_image', title: DEFAULT_TITLE, description: SITE_DESCRIPTION, images: [DEFAULT_OG_IMAGE.url] },
   // Stop iOS turning prices/dates into tappable phone links
   formatDetection: { telephone: false, date: false, address: false },
+  // Lets Google verify site ownership for AdSense (only when an AdSense ID is configured)
+  ...(ADSENSE_CLIENT && { other: { 'google-adsense-account': ADSENSE_CLIENT } }),
 };
 
 export const viewport: Viewport = {
-  themeColor: '#0b6e3c',
+  themeColor: '#1e40af',
   width: 'device-width',
   initialScale: 1,
 };
@@ -35,7 +42,7 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   const wa = whatsappNumber();
   return (
-    <html lang="en-NG">
+    <html lang="en-NG" className={display.variable}>
       <body className="flex min-h-dvh flex-col font-sans antialiased">
         <a
           href="#main"

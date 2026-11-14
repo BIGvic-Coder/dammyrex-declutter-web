@@ -6,6 +6,7 @@ import { CONDITION_LABEL, formatNaira } from '@/lib/format';
 import type { Category, ItemCondition, ItemStatus } from '@/lib/types';
 import type { AdminApi, AdminItem, ItemPage, ItemPatch } from './admin-api';
 import { PhotoManager } from './PhotoManager';
+import { useToast } from './toast';
 import { Btn, Empty, fmtDate, LinkBtn, Notice, Pager, prettyPhone, Thumb, waLink } from './ui';
 
 const STATUSES: ItemStatus[] = ['PENDING', 'AVAILABLE', 'RESERVED', 'SOLD', 'REJECTED'];
@@ -161,13 +162,15 @@ function AdminItemCard({
   const [more, setMore] = useState(false);
   const [price, setPrice] = useState(String(item.price));
   const [featured, setFeatured] = useState(item.featured);
+  const toast = useToast();
 
-  async function run(fn: () => Promise<unknown>, confirmText?: string) {
+  async function run(fn: () => Promise<unknown>, confirmText?: string, done = 'Saved') {
     if (confirmText && !window.confirm(confirmText)) return;
     setBusy(true);
     setError('');
     try {
       await fn();
+      toast(done);
       onDone();
     } catch (e) {
       if (!onAuthError(e)) setError((e as Error).message);
@@ -187,7 +190,7 @@ function AdminItemCard({
       if (featured !== item.featured) patch.featured = featured;
       if (Object.keys(patch).length) await api.updateItem(item.id, patch);
       await api.setStatus(item.id, 'AVAILABLE');
-    });
+    }, undefined, 'Item approved and live');
 
   const sellerMsg = `Hi ${item.seller.name}, this is DammyRex Declutter about your "${item.title}".`;
 
@@ -267,7 +270,7 @@ function AdminItemCard({
             <Btn variant="primary" disabled={busy} onClick={approve}>
               {busy ? 'Working…' : priceChanged || featured !== item.featured ? 'Save & approve' : 'Approve'}
             </Btn>
-            <Btn variant="danger" disabled={busy} onClick={() => run(() => api.setStatus(item.id, 'REJECTED'), `Reject "${item.title}"?`)}>
+            <Btn variant="danger" disabled={busy} onClick={() => run(() => api.setStatus(item.id, 'REJECTED'), `Reject "${item.title}"?`, 'Item rejected')}>
               Reject
             </Btn>
           </>
@@ -277,14 +280,14 @@ function AdminItemCard({
               key={a.to}
               variant={a.variant}
               disabled={busy}
-              onClick={() => run(() => api.setStatus(item.id, a.to), a.to === 'REJECTED' ? `Reject "${item.title}"?` : undefined)}
+              onClick={() => run(() => api.setStatus(item.id, a.to), a.to === 'REJECTED' ? `Reject "${item.title}"?` : undefined, a.label === 'Mark sold' ? 'Marked as sold' : 'Status updated')}
             >
               {a.label}
             </Btn>
           ))
         )}
         {!review && (item.status === 'AVAILABLE' || item.status === 'RESERVED') && (
-          <Btn disabled={busy} onClick={() => run(() => api.updateItem(item.id, { featured: !item.featured }))}>
+          <Btn disabled={busy} onClick={() => run(() => api.updateItem(item.id, { featured: !item.featured }), undefined, item.featured ? 'Removed from featured' : 'Featured on home page')}>
             {item.featured ? 'Unfeature' : '★ Feature'}
           </Btn>
         )}
@@ -299,7 +302,7 @@ function AdminItemCard({
             <select
               value={item.status}
               disabled={busy}
-              onChange={(e) => run(() => api.setStatus(item.id, e.target.value as ItemStatus))}
+              onChange={(e) => run(() => api.setStatus(item.id, e.target.value as ItemStatus), undefined, 'Status updated')}
               className="ml-1 rounded-lg border border-gray-300 px-2 py-1.5 text-base"
             >
               {STATUSES.map((s) => (
@@ -307,14 +310,14 @@ function AdminItemCard({
               ))}
             </select>
           </label>
-          <Btn variant="danger" disabled={busy} onClick={() => run(() => api.deleteItem(item.id), `Delete "${item.title}" and its photos permanently? This cannot be undone.`)}>
+          <Btn variant="danger" disabled={busy} onClick={() => run(() => api.deleteItem(item.id), `Delete "${item.title}" and its photos permanently? This cannot be undone.`, 'Item deleted')}>
             Delete
           </Btn>
         </div>
       )}
 
       {editing && <PhotoManager item={item} api={api} onChanged={onDone} onAuthError={onAuthError} />}
-      {editing && <EditForm item={item} categories={categories} api={api} onSaved={() => { setEditing(false); onDone(); }} onAuthError={onAuthError} />}
+      {editing && <EditForm item={item} categories={categories} api={api} onSaved={() => { setEditing(false); toast('Changes saved'); onDone(); }} onAuthError={onAuthError} />}
     </article>
   );
 }

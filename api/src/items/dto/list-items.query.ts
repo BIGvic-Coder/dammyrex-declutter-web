@@ -4,8 +4,8 @@ import { IsBoolean, IsEnum, IsInt, IsOptional, IsString, Max, MaxLength, Min } f
 import { ToBoolean, Trim } from '../../common/transforms';
 
 export class ListItemsQuery {
-  /** Category slug, e.g. "fridges" */
-  @IsOptional() @Trim() @IsString() @MaxLength(60)
+  /** Category slug, e.g. "fridges", or several comma-separated: "fridges,freezers" */
+  @IsOptional() @Trim() @IsString() @MaxLength(200)
   category?: string;
 
   @IsOptional() @Type(() => Number) @IsInt() @Min(0)

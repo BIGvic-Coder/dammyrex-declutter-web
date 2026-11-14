@@ -41,6 +41,12 @@ export function Filters({ categories, filters }: { categories: Category[]; filte
             <label htmlFor="category" className="mb-1 block text-xs font-medium text-gray-600">Category</label>
             <select id="category" name="category" defaultValue={filters.category ?? ''} className={input}>
               <option value="">All categories</option>
+              {/* Footer links can select several categories at once, e.g. "fridges,freezers" */}
+              {filters.category?.includes(',') && (
+                <option value={filters.category}>
+                  {categories.filter((c) => filters.category!.split(',').includes(c.slug)).map((c) => c.name).join(' & ')}
+                </option>
+              )}
               {categories.map((c) => (
                 <option key={c.id} value={c.slug}>{c.name}</option>
               ))}

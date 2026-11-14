@@ -14,6 +14,8 @@ const categories = [
   { name: 'Bed Frames', slug: 'bed-frames', icon: '🪵' },
   { name: 'Chairs', slug: 'chairs', icon: '🪑' },
   { name: 'Tables', slug: 'tables', icon: '🍽️' },
+  { name: 'Electronics', slug: 'electronics', icon: '📺' },
+  { name: 'Kitchen Appliances', slug: 'kitchen-appliances', icon: '🍳' },
   { name: 'Others', slug: 'others', icon: '📦' },
 ];
 

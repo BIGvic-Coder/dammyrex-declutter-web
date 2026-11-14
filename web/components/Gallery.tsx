@@ -19,7 +19,19 @@ export function Gallery({ images, title, dimmed = false }: { images: ItemImage[]
   const goTo = (i: number) => {
     const el = track.current;
     if (!el) return;
-    el.scrollTo({ left: i * el.clientWidth, behavior: 'smooth' });
+    const next = (i + images.length) % images.length; // wrap around
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    el.scrollTo({ left: next * el.clientWidth, behavior: reduce ? 'auto' : 'smooth' });
+  };
+
+  const onKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'ArrowRight') {
+      e.preventDefault();
+      goTo(index + 1);
+    } else if (e.key === 'ArrowLeft') {
+      e.preventDefault();
+      goTo(index - 1);
+    }
   };
 
   const onScroll = () => {
@@ -35,6 +47,8 @@ export function Gallery({ images, title, dimmed = false }: { images: ItemImage[]
         <div
           ref={track}
           onScroll={onScroll}
+          onKeyDown={onKeyDown}
+          tabIndex={images.length > 1 ? 0 : undefined}
           className="no-scrollbar flex aspect-[4/3] snap-x snap-mandatory overflow-x-auto"
           aria-roledescription="carousel"
           aria-label={`${title} photos`}
@@ -54,6 +68,12 @@ export function Gallery({ images, title, dimmed = false }: { images: ItemImage[]
           ))}
         </div>
         {images.length > 1 && (
+          <>
+            <ArrowButton dir="prev" onClick={() => goTo(index - 1)} />
+            <ArrowButton dir="next" onClick={() => goTo(index + 1)} />
+          </>
+        )}
+        {images.length > 1 && (
           <span className="absolute bottom-2 right-2 rounded-full bg-black/60 px-2.5 py-1 text-xs font-medium text-white">
             {index + 1} / {images.length}
           </span>
@@ -61,7 +81,7 @@ export function Gallery({ images, title, dimmed = false }: { images: ItemImage[]
       </div>
 
       {images.length > 1 && (
-        <ul className="no-scrollbar mt-2 flex gap-2 overflow-x-auto">
+        <ul className="no-scrollbar mt-1 flex gap-2 overflow-x-auto p-1">
           {images.map((img, i) => (
             <li key={img.id} className="shrink-0">
               <button
@@ -69,7 +89,7 @@ export function Gallery({ images, title, dimmed = false }: { images: ItemImage[]
                 onClick={() => goTo(i)}
                 aria-label={`Show photo ${i + 1}`}
                 aria-current={i === index}
-                className={`relative block h-14 w-14 overflow-hidden rounded-lg ring-2 ${i === index ? 'ring-brand-600' : 'ring-transparent'}`}
+                className={`relative block h-14 w-14 overflow-hidden rounded-lg ring-2 transition duration-200 ${i === index ? 'scale-105 ring-brand-600' : 'opacity-70 ring-transparent hover:opacity-100'}`}
               >
                 <Image src={img.url} alt="" fill sizes="64px" className="object-cover" />
               </button>
@@ -78,5 +98,19 @@ export function Gallery({ images, title, dimmed = false }: { images: ItemImage[]
         </ul>
       )}
     </div>
+  );
+}
+
+/** Prev/next arrows (phones can also swipe). Fade in on hover on desktop. */
+function ArrowButton({ dir, onClick }: { dir: 'prev' | 'next'; onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={dir === 'prev' ? 'Previous photo' : 'Next photo'}
+      className={`absolute top-1/2 grid h-11 w-11 -translate-y-1/2 place-items-center rounded-full bg-white/90 text-xl font-bold text-gray-800 shadow-md transition hover:scale-105 hover:bg-white active:scale-95 ${dir === 'prev' ? 'left-2' : 'right-2'}`}
+    >
+      <span aria-hidden="true">{dir === 'prev' ? '‹' : '›'}</span>
+    </button>
   );
 }

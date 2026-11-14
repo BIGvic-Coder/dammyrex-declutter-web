@@ -125,3 +125,44 @@ model Review {
 
   @@index([approved, createdAt])
 }
+
+enum AdPlacement {
+  /// Wide banner below the homepage hero
+  HOME_BANNER
+  /// "Sponsored" card mixed into the listings grid
+  LISTING_CARD
+  /// Banner on item detail pages
+  ITEM_PAGE
+}
+
+/// Self-managed adverts, created by the CEO in the admin dashboard.
+model Ad {
+  id           String      @id @default(cuid())
+  advertiser   String
+  /// Short text used as the image alt text / card caption
+  headline     String      @default("")
+  /// Cloudinary URL, wide image for desktop
+  imageDesktop String
+  /// Cloudinary URL, narrower image for phones (falls back to imageDesktop)
+  imageMobile  String?
+  /// Where a click goes: a website or a wa.me WhatsApp link
+  linkUrl      String
+  placement    AdPlacement
+  startsAt     DateTime
+  endsAt       DateTime
+  paused       Boolean     @default(false)
+  impressions  Int         @default(0)
+  clicks       Int         @default(0)
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  @@index([placement, paused, startsAt, endsAt])
+}
+
+/// Single-row site settings (id is always 1).
+model SiteSetting {
+  id             Int      @id @default(1)
+  /// Show Google AdSense units in ad spots that have no self-managed ad
+  adsenseEnabled Boolean  @default(false)
+  updatedAt      DateTime @updatedAt
+}

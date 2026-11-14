@@ -1,4 +1,4 @@
-import type { Category, Item, ItemList, Review } from './types';
+import type { AdPlacement, AdsResponse, Category, Item, ItemList, PublicAd, Review } from './types';
 
 export const API_URL = (process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000').replace(/\/$/, '');
 
@@ -61,6 +61,14 @@ export const getCategories = () => safe(apiGet<Category[]>('/categories', 300), 
 
 export const getItems = (filters: ItemFilters = {}) =>
   safe(apiGet<ItemList>(`/items${toQueryString(filters)}`, 60), EMPTY_LIST);
+
+/** Active ads for every placement (cached 5 min; admin changes clear it immediately). */
+export const getAds = () => safe(apiGet<AdsResponse>('/ads', 300), { ads: [], adsenseEnabled: false });
+
+export async function getAdsFor(placement: AdPlacement): Promise<{ ads: PublicAd[]; adsenseEnabled: boolean }> {
+  const { ads, adsenseEnabled } = await getAds();
+  return { ads: ads.filter((a) => a.placement === placement), adsenseEnabled };
+}
 
 export const getReviews = () => safe(apiGet<Review[]>('/reviews', 600), []);
 

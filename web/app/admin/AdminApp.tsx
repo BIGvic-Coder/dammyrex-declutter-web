@@ -5,14 +5,16 @@ import { RequestError } from '@/lib/client';
 import { formatNaira } from '@/lib/format';
 import type { Category } from '@/lib/types';
 import { AddItemForm } from './AddItemForm';
+import { AdsPanel } from './AdsPanel';
 import { adminApi, login, type AdminUser, type Stats } from './admin-api';
 import { InspectionsPanel } from './InspectionsPanel';
 import { ItemsPanel } from './ItemsPanel';
+import { ToastProvider } from './toast';
 import { Btn, Notice } from './ui';
 
 const STORAGE_KEY = 'dammyrex-admin';
 type Session = { token: string; admin: AdminUser };
-type Tab = 'dashboard' | 'add' | 'review' | 'items' | 'inspections';
+type Tab = 'dashboard' | 'add' | 'review' | 'items' | 'inspections' | 'ads';
 
 function readSession(): Session | null {
   try {
@@ -59,7 +61,11 @@ export function AdminApp() {
         }}
       />
     );
-  return <Dashboard session={session} onLogout={logout} />;
+  return (
+    <ToastProvider>
+      <Dashboard session={session} onLogout={logout} />
+    </ToastProvider>
+  );
 }
 
 function LoginForm({ onLogin, note }: { onLogin: (s: Session) => void; note: string }) {
@@ -147,6 +153,7 @@ function Dashboard({ session, onLogout }: { session: Session; onLogout: (note?: 
     { id: 'review', label: 'Review', count: pending },
     { id: 'items', label: 'Items' },
     { id: 'inspections', label: 'Inspections', count: requested },
+    { id: 'ads', label: 'Ads' },
   ];
 
   return (
@@ -189,6 +196,7 @@ function Dashboard({ session, onLogout }: { session: Session; onLogout: (note?: 
         {tab === 'review' && <ItemsPanel key="review" mode="review" api={api} categories={categories} onChanged={loadStats} onAuthError={onAuthError} />}
         {tab === 'items' && <ItemsPanel key="all" mode="all" api={api} categories={categories} onChanged={loadStats} onAuthError={onAuthError} />}
         {tab === 'inspections' && <InspectionsPanel api={api} onChanged={loadStats} onAuthError={onAuthError} />}
+        {tab === 'ads' && <AdsPanel api={api} onAuthError={onAuthError} />}
       </div>
     </div>
   );

@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { AdSlot } from '@/components/AdSlot';
 import { BookInspectionForm } from '@/components/BookInspectionForm';
 import { Gallery } from '@/components/Gallery';
 import { ItemGrid } from '@/components/ItemCard';
@@ -8,7 +9,7 @@ import { PinIcon, WhatsAppIcon } from '@/components/icons';
 import { SectionHeading } from '@/components/SectionHeading';
 import { ShareButtons } from '@/components/ShareButtons';
 import { StatusBadge } from '@/components/StatusBadge';
-import { getItem, getItems } from '@/lib/api';
+import { getAdsFor, getItem, getItems } from '@/lib/api';
 import { CONDITION_LABEL, formatNaira, timeAgo } from '@/lib/format';
 import { absoluteUrl, jsonLd, ogImageFromPhoto, pageMetadata } from '@/lib/seo';
 import { itemUrl, itemWhatsappText, SITE_NAME, whatsappLink, whatsappNumber } from '@/lib/site';
@@ -83,9 +84,11 @@ export default async function ItemPage({ params }: { params: Params }) {
   const item = await getItem(id);
   if (!item) notFound();
 
-  const similar = (await getItems({ category: item.category.slug, limit: '5' })).items
-    .filter((i) => i.id !== item.id)
-    .slice(0, 4);
+  const [similarList, itemAds] = await Promise.all([
+    getItems({ category: item.category.slug, limit: '5' }),
+    getAdsFor('ITEM_PAGE'),
+  ]);
+  const similar = similarList.items.filter((i) => i.id !== item.id).slice(0, 4);
 
   const sold = item.status === 'SOLD';
   const reserved = item.status === 'RESERVED';
@@ -195,6 +198,9 @@ export default async function ItemPage({ params }: { params: Params }) {
           </div>
         </div>
       </div>
+
+      {/* Sponsored banner below the item details, never over them */}
+      <AdSlot placement="ITEM_PAGE" ads={itemAds.ads} adsenseEnabled={itemAds.adsenseEnabled} className="mt-10" />
 
       {similar.length > 0 && (
         <section className="mt-12">

@@ -3,6 +3,7 @@
 import { useRef, useState } from 'react';
 import { compressImage } from '@/lib/client';
 import type { AdminApi, AdminItem } from './admin-api';
+import { useToast } from './toast';
 import { Btn, Notice, Thumb } from './ui';
 
 const MAX_PHOTOS = 8;
@@ -22,6 +23,7 @@ export function PhotoManager({
   const [busy, setBusy] = useState('');
   const [error, setError] = useState('');
   const fileInput = useRef<HTMLInputElement>(null);
+  const toast = useToast();
   const room = MAX_PHOTOS - item.images.length;
 
   async function run(label: string, fn: () => Promise<unknown>) {
@@ -29,6 +31,7 @@ export function PhotoManager({
     setError('');
     try {
       await fn();
+      toast('Photos updated');
       onChanged();
     } catch (e) {
       if (!onAuthError(e)) setError((e as Error).message);

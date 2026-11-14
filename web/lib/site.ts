@@ -1,4 +1,5 @@
 import { formatNaira } from './format';
+import { SITE_CONFIG } from './site-config';
 
 export const SITE_NAME = 'DammyRex Declutter';
 /** Strips stray quotes/spaces that sometimes get pasted into dashboard env values. */
@@ -18,8 +19,8 @@ export const SITE_URL = (
 export const SITE_DESCRIPTION =
   'Neatly used fridges, freezers, gas cookers, fans, ACs, beds, chairs and tables in Nigeria. Inspect in person before you pay. Chat with us on WhatsApp.';
 
-/** Business WhatsApp number (public: it is shown on every page). Used when no env var is set. */
-const DEFAULT_WHATSAPP = '2348101295489';
+/** Business WhatsApp number (public: shown on every page). Edit it in lib/site-config.ts; the WHATSAPP_NUMBER env var overrides it. */
+const DEFAULT_WHATSAPP = SITE_CONFIG.whatsappNumber;
 
 export function whatsappNumber(): string {
   const fromEnv = (process.env.WHATSAPP_NUMBER || process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || '').replace(/\D/g, '');

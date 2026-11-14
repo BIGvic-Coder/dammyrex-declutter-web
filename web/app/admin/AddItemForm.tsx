@@ -7,6 +7,7 @@ import { isValidNgPhone } from '@/lib/client';
 import { CONDITION_LABEL, formatNaira } from '@/lib/format';
 import type { Category, ItemCondition } from '@/lib/types';
 import type { AdminApi, AdminItem } from './admin-api';
+import { useToast } from './toast';
 import { Btn, Notice } from './ui';
 
 const MAX_PHOTOS = 8;
@@ -90,6 +91,7 @@ export function AddItemForm({
   const [created, setCreated] = useState<AdminItem | null>(null);
   const [showSeller, setShowSeller] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
+  const toast = useToast();
 
   const set = (k: keyof Values) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const value = e.target.type === 'checkbox' ? (e.target as HTMLInputElement).checked : e.target.value;
@@ -140,6 +142,7 @@ export function AddItemForm({
       setValues(blank());
       setShowSeller(false);
       setCreated(item);
+      toast(item.status === 'AVAILABLE' ? 'Item posted' : 'Item saved to Review');
       onCreated();
       window.scrollTo({ top: 0 });
     } catch (err) {

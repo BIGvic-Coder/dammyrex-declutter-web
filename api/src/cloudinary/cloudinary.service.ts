@@ -2,7 +2,7 @@ import { Injectable, Logger, ServiceUnavailableException } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config';
 import { v2 as cloudinary, UploadApiResponse } from 'cloudinary';
 
-const FOLDER = 'dammyrex/items';
+const DEFAULT_FOLDER = 'dammyrex/items';
 
 @Injectable()
 export class CloudinaryService {
@@ -28,14 +28,14 @@ export class CloudinaryService {
    * so phone photos (often 4-8 MB) don't bloat storage; delivery-time resizing
    * happens on the web side via Cloudinary URL transforms.
    */
-  upload(file: Express.Multer.File): Promise<string> {
+  upload(file: Express.Multer.File, folder = DEFAULT_FOLDER): Promise<string> {
     if (!this.configured) {
       throw new ServiceUnavailableException('Image uploads are not available right now');
     }
     return new Promise((resolve, reject) => {
       const stream = cloudinary.uploader.upload_stream(
         {
-          folder: FOLDER,
+          folder,
           resource_type: 'image',
           transformation: [{ width: 1600, height: 1600, crop: 'limit', quality: 'auto:good' }],
         },
@@ -52,8 +52,8 @@ export class CloudinaryService {
   }
 
   /** Uploads several photos; if any fail, deletes the ones that succeeded and rethrows. */
-  async uploadMany(files: Express.Multer.File[]): Promise<string[]> {
-    const results = await Promise.allSettled(files.map((f) => this.upload(f)));
+  async uploadMany(files: Express.Multer.File[], folder = DEFAULT_FOLDER): Promise<string[]> {
+    const results = await Promise.allSettled(files.map((f) => this.upload(f, folder)));
     const urls = results.flatMap((r) => (r.status === 'fulfilled' ? [r.value] : []));
     if (urls.length !== files.length) {
       await this.deleteMany(urls);

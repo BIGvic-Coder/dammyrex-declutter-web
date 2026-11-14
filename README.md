@@ -119,6 +119,30 @@ Testimonials: there is no admin screen for reviews yet. Add them in Prisma Studi
   clears the cached catalogue so the change shows on the homepage, listings, search and filters immediately.
 - All `/admin/*` API routes require the admin token; visitors get `401`.
 
+## Contact details, social links, footer and About numbers
+
+Everything editable lives in **`web/lib/site-config.ts`**: WhatsApp number and how it's displayed, Instagram /
+Facebook / TikTok links (they point to each platform's home page until you fill them in), opening hours, the
+footer "Shop" links (each can cover several categories) and the About page counters. Edit, push, done.
+(`WHATSAPP_NUMBER` in Vercel, if set, overrides the number.)
+
+## Adverts (admin → Ads)
+
+- **+ New ad**: advertiser, short text, image(s), where it shows, what a tap opens (website or WhatsApp), start/end date.
+- Placements: **Homepage banner** (below the hero), **Listings card** ("Sponsored" card after 8 items in Browse/search),
+  **Item page banner** (below the item details). Recommended sizes are shown in the form.
+- Only ads that are not paused and inside their dates are shown; several ads for the same spot take turns.
+- Views (counted when half the ad is on screen) and clicks are shown per ad, so advertisers can see results.
+- Pause/Resume, Edit and Delete are on each ad. All ad routes need the admin login, same as items.
+
+### Google AdSense (optional)
+
+1. Apply at <https://adsense.google.com> with the site address. Google checks the site (can take days or weeks).
+2. Once approved, create three display ad units and set in **Vercel → Settings → Environment Variables**:
+   `NEXT_PUBLIC_ADSENSE_CLIENT` (`ca-pub-…`), `NEXT_PUBLIC_ADSENSE_SLOT_HOME`, `NEXT_PUBLIC_ADSENSE_SLOT_LISTING`,
+   `NEXT_PUBLIC_ADSENSE_SLOT_ITEM`, then redeploy. `/ads.txt` and the verification tag are generated automatically.
+3. Turn on **Admin → Ads → Google AdSense**. Google ads only fill spots with no ad of your own running.
+
 ## Useful commands
 
 ```powershell

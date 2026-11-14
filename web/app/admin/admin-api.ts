@@ -1,6 +1,6 @@
 // Typed client for the admin endpoints. Browser-only.
 import { API_URL, postFormWithProgress, RequestError } from '@/lib/client';
-import type { Category, Item, ItemCondition, ItemStatus } from '@/lib/types';
+import type { AdPlacement, Category, Item, ItemCondition, ItemStatus } from '@/lib/types';
 
 export type InspectionStatus = 'REQUESTED' | 'CONFIRMED' | 'DONE' | 'CANCELLED';
 
@@ -49,6 +49,27 @@ export interface Stats {
   upcomingConfirmedInspections7Days: number;
   featuredLive: number;
   sellers: number;
+}
+
+export interface AdminAd {
+  id: string;
+  advertiser: string;
+  headline: string;
+  imageDesktop: string;
+  imageMobile: string | null;
+  linkUrl: string;
+  placement: AdPlacement;
+  startsAt: string;
+  endsAt: string;
+  paused: boolean;
+  impressions: number;
+  clicks: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface SiteSettings {
+  adsenseEnabled: boolean;
 }
 
 export interface AdminUser {
@@ -143,6 +164,17 @@ export function adminApi(token: string) {
       mutate(call<AdminItem>('DELETE', `${itemPath(id)}/images/${encodeURIComponent(imageId)}`, token)),
     setCover: (id: string, imageId: string) =>
       mutate(call<AdminItem>('PATCH', `${itemPath(id)}/images/${encodeURIComponent(imageId)}/cover`, token)),
+    ads: () => call<AdminAd[]>('GET', '/admin/ads', token),
+    /** Multipart: ad fields + "imageDesktop" (required) / "imageMobile" files. */
+    createAd: (form: FormData, onProgress: (p: number) => void) =>
+      mutate(postFormWithProgress<AdminAd>('/admin/ads', form, onProgress, token)),
+    updateAd: (id: string, form: FormData, onProgress: (p: number) => void) =>
+      mutate(postFormWithProgress<AdminAd>(`/admin/ads/${encodeURIComponent(id)}`, form, onProgress, token, 'PATCH')),
+    setAdPaused: (id: string, paused: boolean) =>
+      mutate(call<AdminAd>('PATCH', `/admin/ads/${encodeURIComponent(id)}`, token, { paused })),
+    deleteAd: (id: string) => mutate(call<{ deleted: boolean }>('DELETE', `/admin/ads/${encodeURIComponent(id)}`, token)),
+    settings: () => call<SiteSettings>('GET', '/admin/settings', token),
+    updateSettings: (patch: SiteSettings) => mutate(call<SiteSettings>('PATCH', '/admin/settings', token, patch)),
     inspections: (o: { status?: InspectionStatus; page?: number }) =>
       call<InspectionPage>('GET', `/admin/inspections${qs(o)}`, token),
     // Confirming/cancelling an inspection reserves/releases the item, so refresh the site too

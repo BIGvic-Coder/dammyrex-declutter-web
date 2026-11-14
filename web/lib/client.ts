@@ -53,10 +53,11 @@ export function postFormWithProgress<T>(
   form: FormData,
   onProgress: (p: number) => void,
   token?: string,
+  method: 'POST' | 'PATCH' = 'POST',
 ): Promise<T> {
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();
-    xhr.open('POST', `${API_URL}${path}`);
+    xhr.open(method, `${API_URL}${path}`);
     if (token) xhr.setRequestHeader('Authorization', `Bearer ${token}`);
     xhr.timeout = 5 * 60 * 1000;
     xhr.upload.onprogress = (e) => e.lengthComputable && onProgress(e.loaded / e.total);

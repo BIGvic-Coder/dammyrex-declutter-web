@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { StatusBadge } from '@/components/StatusBadge';
 import { formatNaira } from '@/lib/format';
 import type { AdminApi, AdminInspection, InspectionPage, InspectionStatus } from './admin-api';
+import { useToast } from './toast';
 import { Btn, Empty, fmtDateTime, LinkBtn, Notice, Pager, prettyPhone, Thumb, TZ, waLink } from './ui';
 
 const TABS: { value: InspectionStatus | ''; label: string }[] = [
@@ -116,6 +117,7 @@ function InspectionCard({
   const [rescheduling, setRescheduling] = useState(false);
   const [newDate, setNewDate] = useState('');
   const [newTime, setNewTime] = useState('');
+  const toast = useToast();
 
   const when = fmtDateTime(insp.slotAt);
   const past = new Date(insp.slotAt).getTime() < Date.now();
@@ -127,6 +129,7 @@ function InspectionCard({
     setError('');
     try {
       await api.updateInspection(insp.id, patch);
+      toast(patch.status === 'CONFIRMED' ? 'Inspection confirmed' : patch.status === 'CANCELLED' ? 'Inspection cancelled' : patch.status === 'DONE' ? 'Marked as done' : 'Inspection updated');
       setRescheduling(false);
       onDone();
     } catch (e) {

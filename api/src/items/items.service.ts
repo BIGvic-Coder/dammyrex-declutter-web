@@ -22,7 +22,10 @@ export class ItemsService {
     const limit = query.limit ?? DEFAULT_LIMIT;
 
     const and: Prisma.ItemWhereInput[] = [publicVisibleWhere()];
-    if (query.category) and.push({ category: { slug: query.category } });
+    if (query.category) {
+      const slugs = [...new Set(query.category.split(',').map((c) => c.trim()).filter(Boolean))].slice(0, 10);
+      if (slugs.length) and.push({ category: { slug: { in: slugs } } });
+    }
     if (query.minPrice != null || query.maxPrice != null) {
       and.push({ price: { gte: query.minPrice, lte: query.maxPrice } });
     }

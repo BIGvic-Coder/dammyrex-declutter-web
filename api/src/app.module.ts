@@ -3,6 +3,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { AdminModule } from './admin/admin.module';
+import { AdsModule } from './ads/ads.module';
 import { CategoriesModule } from './categories/categories.module';
 import { CloudinaryModule } from './cloudinary/cloudinary.module';
 import { HealthController } from './health.controller';
@@ -31,6 +32,7 @@ import { ReviewsModule } from './reviews/reviews.module';
     InspectionsModule,
     ReviewsModule,
     AdminModule,
+    AdsModule,
   ],
   controllers: [HealthController],
 })

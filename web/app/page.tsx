@@ -1,10 +1,11 @@
 import Link from 'next/link';
+import { AdSlot } from '@/components/AdSlot';
 import { CategoryGrid } from '@/components/CategoryGrid';
 import { EmptyState } from '@/components/EmptyState';
 import { CheckIcon } from '@/components/icons';
 import { ItemGrid } from '@/components/ItemCard';
 import { SectionHeading } from '@/components/SectionHeading';
-import { getCategories, getItems, getReviews } from '@/lib/api';
+import { getAdsFor, getCategories, getItems, getReviews } from '@/lib/api';
 import { jsonLd, pageMetadata } from '@/lib/seo';
 import { SITE_DESCRIPTION, SITE_NAME, SITE_URL, whatsappNumber } from '@/lib/site';
 
@@ -50,11 +51,12 @@ const STEPS = [
 ];
 
 export default async function HomePage() {
-  const [featured, newest, categories, reviews] = await Promise.all([
+  const [featured, newest, categories, reviews, homeAds] = await Promise.all([
     getItems({ featured: 'true', limit: '8' }),
     getItems({ limit: '8' }),
     getCategories(),
     getReviews(),
+    getAdsFor('HOME_BANNER'),
   ]);
 
   return (
@@ -93,6 +95,9 @@ export default async function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* Sponsored banner (only when an ad is running) */}
+      <AdSlot placement="HOME_BANNER" ads={homeAds.ads} adsenseEnabled={homeAds.adsenseEnabled} className="mx-auto max-w-6xl px-4 pt-6" />
 
       {/* How it works */}
       <section className="mx-auto max-w-6xl px-4 pt-8" aria-labelledby="how">

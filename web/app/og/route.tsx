@@ -14,7 +14,7 @@ export function GET() {
           flexDirection: 'column',
           justifyContent: 'center',
           padding: '72px 80px',
-          background: 'linear-gradient(160deg, #095a32 0%, #0b6e3c 60%, #0f8a4b 100%)',
+          background: 'linear-gradient(160deg, #1e3a8a 0%, #1e40af 60%, #2563eb 100%)',
           color: 'white',
           fontFamily: 'sans-serif',
         }}
@@ -26,7 +26,7 @@ export function GET() {
               height: 96,
               borderRadius: 20,
               background: 'white',
-              color: '#0b6e3c',
+              color: '#1e40af',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',

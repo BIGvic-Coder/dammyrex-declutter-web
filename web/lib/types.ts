@@ -46,3 +46,21 @@ export interface Review {
   rating: number;
   createdAt: string;
 }
+
+export type AdPlacement = 'HOME_BANNER' | 'LISTING_CARD' | 'ITEM_PAGE';
+
+/** Public view of an active ad (clicks go through the API's /ads/:id/click redirect). */
+export interface PublicAd {
+  id: string;
+  advertiser: string;
+  headline: string;
+  imageDesktop: string;
+  imageMobile: string | null;
+  placement: AdPlacement;
+  endsAt: string;
+}
+
+export interface AdsResponse {
+  ads: PublicAd[];
+  adsenseEnabled: boolean;
+}
