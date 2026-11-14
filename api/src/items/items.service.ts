@@ -1,13 +1,13 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
+import { MAX_IMAGES } from '../common/image-upload';
 import { publicItemSelect, publicVisibleWhere } from '../common/public-item';
 import { TX_OPTIONS } from '../common/transaction';
 import { PrismaService } from '../prisma/prisma.service';
 import { ListItemsQuery } from './dto/list-items.query';
 import { SubmitItemDto } from './dto/submit-item.dto';
 
-export const MAX_IMAGES = 8;
 const DEFAULT_LIMIT = 12;
 
 @Injectable()
@@ -69,14 +69,7 @@ export class ItemsService {
     const category = await this.prisma.category.findUnique({ where: { id: dto.categoryId } });
     if (!category) throw new BadRequestException('Choose a valid category');
 
-    // Upload all photos first; if any fail, clean up the ones that succeeded.
-    const results = await Promise.allSettled(files.map((f) => this.cloudinary.upload(f)));
-    const urls = results.flatMap((r) => (r.status === 'fulfilled' ? [r.value] : []));
-    if (urls.length !== files.length) {
-      await Promise.all(urls.map((u) => this.cloudinary.deleteByUrl(u)));
-      const failure = results.find((r) => r.status === 'rejected') as PromiseRejectedResult;
-      throw failure.reason;
-    }
+    const urls = await this.cloudinary.uploadMany(files);
 
     try {
       const item = await this.prisma.$transaction(async (tx) => {
@@ -107,7 +100,7 @@ export class ItemsService {
         message: 'Thanks! Your item has been received and will be posted after review.',
       };
     } catch (e) {
-      await Promise.all(urls.map((u) => this.cloudinary.deleteByUrl(u)));
+      await this.cloudinary.deleteMany(urls);
       throw e;
     }
   }

@@ -5,6 +5,7 @@ import { StatusBadge } from '@/components/StatusBadge';
 import { CONDITION_LABEL, formatNaira } from '@/lib/format';
 import type { Category, ItemCondition, ItemStatus } from '@/lib/types';
 import type { AdminApi, AdminItem, ItemPage, ItemPatch } from './admin-api';
+import { PhotoManager } from './PhotoManager';
 import { Btn, Empty, fmtDate, LinkBtn, Notice, Pager, prettyPhone, Thumb, waLink } from './ui';
 
 const STATUSES: ItemStatus[] = ['PENDING', 'AVAILABLE', 'RESERVED', 'SOLD', 'REJECTED'];
@@ -312,6 +313,7 @@ function AdminItemCard({
         </div>
       )}
 
+      {editing && <PhotoManager item={item} api={api} onChanged={onDone} onAuthError={onAuthError} />}
       {editing && <EditForm item={item} categories={categories} api={api} onSaved={() => { setEditing(false); onDone(); }} onAuthError={onAuthError} />}
     </article>
   );

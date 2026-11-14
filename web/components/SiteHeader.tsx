@@ -15,16 +15,16 @@ export function SiteHeader({ whatsapp }: { whatsapp: string }) {
           </span>
         </Link>
         <nav className="ml-auto flex items-center gap-1 text-sm font-medium" aria-label="Main">
-          <Link href="/items" className="rounded-lg px-2.5 py-2 text-gray-700 hover:bg-gray-100">
+          <Link href="/items" className="inline-flex min-h-11 items-center rounded-lg px-3 text-gray-700 hover:bg-gray-100">
             Browse
           </Link>
-          <Link href="/sell" className="rounded-lg px-2.5 py-2 text-gray-700 hover:bg-gray-100">
+          <Link href="/sell" className="inline-flex min-h-11 items-center rounded-lg px-3 text-gray-700 hover:bg-gray-100">
             Sell
           </Link>
           {whatsapp && (
             <a
               href={whatsappLink('Hi DammyRex, I have a question.', whatsapp)}
-              className="ml-1 inline-flex items-center gap-1.5 rounded-lg bg-whatsapp px-3 py-2 text-white hover:bg-whatsapp-dark"
+              className="ml-1 inline-flex min-h-11 min-w-11 items-center justify-center gap-1.5 rounded-lg bg-whatsapp px-3 text-white hover:bg-whatsapp-dark"
               target="_blank"
               rel="noopener noreferrer"
               aria-label="Chat with us on WhatsApp"

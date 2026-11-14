@@ -11,3 +11,15 @@ export const ToBoolean = () =>
     if (value === false || value === 'false' || value === '0') return false;
     return value;
   });
+
+/**
+ * Naira amount from a form field: accepts 45000, "45000", "45,000", "₦45,000".
+ * Multipart fields always arrive as strings; JSON bodies may send numbers.
+ */
+export const ToNaira = () =>
+  Transform(({ obj, key }) => {
+    const raw = obj[key];
+    if (typeof raw !== 'string') return raw;
+    const cleaned = raw.replace(/[,\s₦]/g, '');
+    return cleaned === '' ? NaN : Number(cleaned);
+  });

@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { RequestError } from '@/lib/client';
 import { formatNaira } from '@/lib/format';
 import type { Category } from '@/lib/types';
+import { AddItemForm } from './AddItemForm';
 import { adminApi, login, type AdminUser, type Stats } from './admin-api';
 import { InspectionsPanel } from './InspectionsPanel';
 import { ItemsPanel } from './ItemsPanel';
@@ -11,7 +12,7 @@ import { Btn, Notice } from './ui';
 
 const STORAGE_KEY = 'dammyrex-admin';
 type Session = { token: string; admin: AdminUser };
-type Tab = 'dashboard' | 'review' | 'items' | 'inspections';
+type Tab = 'dashboard' | 'add' | 'review' | 'items' | 'inspections';
 
 function readSession(): Session | null {
   try {
@@ -85,7 +86,7 @@ function LoginForm({ onLogin, note }: { onLogin: (s: Session) => void; note: str
   return (
     <div className="mx-auto max-w-sm px-4 py-12">
       <h1 className="text-2xl font-bold text-gray-900">Admin login</h1>
-      <p className="mt-1 text-sm text-gray-600">DammyRex Declutter dashboard</p>
+      <p className="mt-1 text-sm text-gray-600">DammyRex Declutter dashboard. Only the owner can post, edit or delete items.</p>
       <form onSubmit={submit} className="mt-6 space-y-4 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-black/5">
         {note && <Notice kind="info">{note}</Notice>}
         <label className="block text-sm">
@@ -142,6 +143,7 @@ function Dashboard({ session, onLogout }: { session: Session; onLogout: (note?: 
   const requested = stats?.inspections.REQUESTED ?? 0;
   const tabs: { id: Tab; label: string; count?: number }[] = [
     { id: 'dashboard', label: 'Dashboard' },
+    { id: 'add', label: '+ Add item' },
     { id: 'review', label: 'Review', count: pending },
     { id: 'items', label: 'Items' },
     { id: 'inspections', label: 'Inspections', count: requested },
@@ -154,7 +156,10 @@ function Dashboard({ session, onLogout }: { session: Session; onLogout: (note?: 
           <h1 className="text-xl font-bold text-gray-900">Admin</h1>
           <p className="text-xs text-gray-500">Signed in as {session.admin.name}</p>
         </div>
-        <Btn variant="ghost" onClick={() => onLogout()}>Log out</Btn>
+        <div className="flex gap-2">
+          {tab !== 'add' && <Btn variant="primary" onClick={() => setTab('add')}>+ Add item</Btn>}
+          <Btn variant="ghost" onClick={() => onLogout()}>Log out</Btn>
+        </div>
       </div>
 
       <nav className="no-scrollbar -mx-4 mt-4 flex gap-1 overflow-x-auto border-b border-black/10 px-4" role="tablist">
@@ -164,7 +169,7 @@ function Dashboard({ session, onLogout }: { session: Session; onLogout: (note?: 
             role="tab"
             aria-selected={tab === t.id}
             onClick={() => setTab(t.id)}
-            className={`flex shrink-0 items-center gap-1.5 border-b-2 px-3 py-2.5 text-sm font-semibold ${tab === t.id ? 'border-brand-700 text-brand-800' : 'border-transparent text-gray-600'}`}
+            className={`flex min-h-11 shrink-0 items-center gap-1.5 border-b-2 px-3 py-2.5 text-sm font-semibold ${tab === t.id ? 'border-brand-700 text-brand-800' : 'border-transparent text-gray-600'}`}
           >
             {t.label}
             {!!t.count && <span className="rounded-full bg-red-600 px-1.5 text-xs text-white">{t.count}</span>}
@@ -180,6 +185,7 @@ function Dashboard({ session, onLogout }: { session: Session; onLogout: (note?: 
             {stats && <StatsGrid stats={stats} go={setTab} />}
           </>
         )}
+        {tab === 'add' && <AddItemForm api={api} categories={categories} onCreated={loadStats} onAuthError={onAuthError} />}
         {tab === 'review' && <ItemsPanel key="review" mode="review" api={api} categories={categories} onChanged={loadStats} onAuthError={onAuthError} />}
         {tab === 'items' && <ItemsPanel key="all" mode="all" api={api} categories={categories} onChanged={loadStats} onAuthError={onAuthError} />}
         {tab === 'inspections' && <InspectionsPanel api={api} onChanged={loadStats} onAuthError={onAuthError} />}

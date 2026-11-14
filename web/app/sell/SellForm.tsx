@@ -1,15 +1,15 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { Field, FormAlert, inputClass } from '@/components/form';
 import { CheckIcon, WhatsAppIcon } from '@/components/icons';
-import { compressImage, formatBytes, isValidNgPhone, postFormWithProgress } from '@/lib/client';
+import { type Photo, PhotoPicker, releasePhotos } from '@/components/PhotoPicker';
+import { isValidNgPhone, postFormWithProgress } from '@/lib/client';
 import { CONDITION_LABEL } from '@/lib/format';
 import type { Category, ItemCondition } from '@/lib/types';
 
 const MAX_PHOTOS = 8;
-const MAX_BYTES = 8 * 1024 * 1024;
 
 type Values = {
   title: string;
@@ -23,7 +23,6 @@ type Values = {
   sellerPhone: string;
 };
 type Errors = Partial<Record<keyof Values | 'photos', string>>;
-type Photo = { file: File; url: string };
 
 const EMPTY: Values = {
   title: '',
@@ -63,53 +62,13 @@ export function SellForm({ categories, whatsapp }: { categories: Category[]; wha
   const [formError, setFormError] = useState('');
   const [progress, setProgress] = useState<number | null>(null);
   const [done, setDone] = useState<{ title: string } | null>(null);
-  const fileInput = useRef<HTMLInputElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
   const doneHeading = useRef<HTMLHeadingElement>(null);
-
-  // Free preview memory when photos are removed or the page closes
-  const photosRef = useRef(photos);
-  photosRef.current = photos;
-  useEffect(() => () => photosRef.current.forEach((p) => URL.revokeObjectURL(p.url)), []);
 
   const set = (k: keyof Values) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     setValues((v) => ({ ...v, [k]: e.target.value }));
     if (errors[k]) setErrors((er) => ({ ...er, [k]: undefined }));
   };
-
-  async function addPhotos(list: FileList | null) {
-    if (!list?.length) return;
-    const room = MAX_PHOTOS - photos.length;
-    const picked = Array.from(list).filter((f) => f.type.startsWith('image/') || /\.(heic|heif)$/i.test(f.name));
-    let note = '';
-    if (picked.length < list.length) note = 'Only photos can be added. ';
-    if (picked.length > room) note += `Only ${MAX_PHOTOS} photos allowed, so the extra ones were skipped.`;
-    setPreparing(true);
-    const prepared: Photo[] = [];
-    for (const f of picked.slice(0, room)) {
-      const small = await compressImage(f);
-      if (small.size > MAX_BYTES) {
-        note = `"${f.name}" is too large (${formatBytes(small.size)}). Max is 8 MB per photo.`;
-        continue;
-      }
-      prepared.push({ file: small, url: URL.createObjectURL(small) });
-    }
-    setPhotos((p) => [...p, ...prepared]);
-    setPreparing(false);
-    setErrors((er) => ({ ...er, photos: note.trim() || undefined }));
-    if (fileInput.current) fileInput.current.value = '';
-  }
-
-  function removePhoto(i: number) {
-    setPhotos((p) => {
-      URL.revokeObjectURL(p[i].url);
-      return p.filter((_, idx) => idx !== i);
-    });
-  }
-
-  function makeCover(i: number) {
-    setPhotos((p) => [p[i], ...p.filter((_, idx) => idx !== i)]);
-  }
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -132,7 +91,7 @@ export function SellForm({ categories, whatsapp }: { categories: Category[]; wha
     try {
       await postFormWithProgress('/items/submit', fd, setProgress);
       setDone({ title: values.title.trim() });
-      photos.forEach((p) => URL.revokeObjectURL(p.url));
+      releasePhotos(photos);
       setPhotos([]);
       setValues(EMPTY);
       // Jump (not smooth-scroll) so the page shrinking under the scroll can't leave it half-way
@@ -195,60 +154,16 @@ export function SellForm({ categories, whatsapp }: { categories: Category[]; wha
         </h2>
         <p className="mt-0.5 text-sm text-gray-600">Clear photos in daylight sell faster. Show the front, sides and any marks.</p>
 
-        <ul className="mt-3 grid grid-cols-3 gap-2 sm:grid-cols-4">
-          {photos.map((p, i) => (
-            <li key={p.url} className="relative aspect-square overflow-hidden rounded-lg bg-gray-100 ring-1 ring-black/5">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={p.url} alt={`Photo ${i + 1}`} className="h-full w-full object-cover" />
-              {i === 0 ? (
-                <span className="absolute bottom-1 left-1 rounded bg-brand-700 px-1.5 py-0.5 text-[10px] font-bold text-white">COVER</span>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => makeCover(i)}
-                  className="absolute bottom-1 left-1 rounded bg-black/60 px-1.5 py-0.5 text-[10px] font-semibold text-white"
-                >
-                  Make cover
-                </button>
-              )}
-              <button
-                type="button"
-                onClick={() => removePhoto(i)}
-                aria-label={`Remove photo ${i + 1}`}
-                className="absolute right-1 top-1 grid h-7 w-7 place-items-center rounded-full bg-black/60 text-white"
-              >
-                ✕
-              </button>
-            </li>
-          ))}
-          {photos.length < MAX_PHOTOS && (
-            <li>
-              <label
-                htmlFor="photos"
-                className={`flex aspect-square cursor-pointer flex-col items-center justify-center gap-1 rounded-lg border-2 border-dashed text-center text-sm font-semibold ${errors.photos ? 'border-red-400 text-red-600' : 'border-brand-600/40 text-brand-700'} hover:bg-brand-50`}
-              >
-                <span className="text-2xl leading-none">＋</span>
-                {preparing ? 'Preparing…' : photos.length ? 'Add more' : 'Add photos'}
-              </label>
-            </li>
-          )}
-        </ul>
-        <input
-          ref={fileInput}
-          id="photos"
-          name="photos"
-          type="file"
-          accept="image/*"
-          multiple
-          className="sr-only"
-          onChange={(e) => addPhotos(e.target.files)}
-          disabled={preparing || submitting}
+        <PhotoPicker
+          inputId="photos"
+          photos={photos}
+          onChange={setPhotos}
+          max={MAX_PHOTOS}
+          error={errors.photos}
+          onError={(m) => setErrors((er) => ({ ...er, photos: m }))}
+          disabled={submitting}
+          onPreparingChange={setPreparing}
         />
-        {errors.photos && (
-          <p id="photos-error" className="mt-2 text-sm text-red-600" role="alert">
-            {errors.photos}
-          </p>
-        )}
       </section>
 
       {/* Item details */}

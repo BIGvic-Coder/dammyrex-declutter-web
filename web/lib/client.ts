@@ -48,10 +48,16 @@ export async function postJson<T>(path: string, data: unknown): Promise<T> {
 }
 
 /** Multipart POST with upload progress (0-1), important feedback on slow mobile data. */
-export function postFormWithProgress<T>(path: string, form: FormData, onProgress: (p: number) => void): Promise<T> {
+export function postFormWithProgress<T>(
+  path: string,
+  form: FormData,
+  onProgress: (p: number) => void,
+  token?: string,
+): Promise<T> {
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();
     xhr.open('POST', `${API_URL}${path}`);
+    if (token) xhr.setRequestHeader('Authorization', `Bearer ${token}`);
     xhr.timeout = 5 * 60 * 1000;
     xhr.upload.onprogress = (e) => e.lengthComputable && onProgress(e.loaded / e.total);
     xhr.onload = () => {

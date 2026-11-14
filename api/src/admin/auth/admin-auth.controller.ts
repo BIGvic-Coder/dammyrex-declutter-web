@@ -1,4 +1,4 @@
-import { Body, Controller, HttpCode, Post, UnauthorizedException, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, Post, Req, UnauthorizedException, UseGuards } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { Throttle } from '@nestjs/throttler';
 import { ClientIpThrottlerGuard } from '../../common/client-ip-throttler.guard';
@@ -6,7 +6,7 @@ import { Transform } from 'class-transformer';
 import { IsEmail, IsString, Length } from 'class-validator';
 import * as bcrypt from 'bcryptjs';
 import { PrismaService } from '../../prisma/prisma.service';
-import { AdminJwtPayload } from './admin.guard';
+import { AdminGuard, AdminJwtPayload, type AdminRequest } from './admin.guard';
 
 class LoginDto {
   @Transform(({ value }) => (typeof value === 'string' ? value.trim().toLowerCase() : value))
@@ -41,5 +41,17 @@ export class AdminAuthController {
       token: await this.jwt.signAsync(payload),
       admin: { id: admin.id, name: admin.name, email: admin.email, role: admin.role },
     };
+  }
+
+  /** Who am I? Confirms the token is valid AND the account still exists. */
+  @Get('me')
+  @UseGuards(AdminGuard)
+  async me(@Req() req: AdminRequest) {
+    const admin = await this.prisma.admin.findUnique({
+      where: { id: req.admin.sub },
+      select: { id: true, name: true, email: true, role: true },
+    });
+    if (!admin) throw new UnauthorizedException('Please log in');
+    return admin;
   }
 }

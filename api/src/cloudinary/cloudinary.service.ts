@@ -51,6 +51,21 @@ export class CloudinaryService {
     });
   }
 
+  /** Uploads several photos; if any fail, deletes the ones that succeeded and rethrows. */
+  async uploadMany(files: Express.Multer.File[]): Promise<string[]> {
+    const results = await Promise.allSettled(files.map((f) => this.upload(f)));
+    const urls = results.flatMap((r) => (r.status === 'fulfilled' ? [r.value] : []));
+    if (urls.length !== files.length) {
+      await this.deleteMany(urls);
+      throw (results.find((r) => r.status === 'rejected') as PromiseRejectedResult).reason;
+    }
+    return urls;
+  }
+
+  deleteMany(urls: string[]): Promise<void[]> {
+    return Promise.all(urls.map((u) => this.deleteByUrl(u)));
+  }
+
   /** Best-effort delete by URL (used when an upload batch fails or an item is deleted). */
   async deleteByUrl(url: string): Promise<void> {
     if (!this.configured) return;

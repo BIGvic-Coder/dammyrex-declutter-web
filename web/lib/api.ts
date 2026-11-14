@@ -2,8 +2,15 @@ import type { Category, Item, ItemList, Review } from './types';
 
 export const API_URL = (process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000').replace(/\/$/, '');
 
+/**
+ * Cache tag on every catalog fetch. The admin dashboard calls /api/revalidate after any change
+ * (add, edit, approve, sold, delete), which clears this tag, so the change shows on the
+ * homepage, listings, search and filters immediately instead of after the revalidate window.
+ */
+export const CATALOG_TAG = 'catalog';
+
 async function apiGet<T>(path: string, revalidate: number): Promise<T> {
-  const res = await fetch(`${API_URL}${path}`, { next: { revalidate } });
+  const res = await fetch(`${API_URL}${path}`, { next: { revalidate, tags: [CATALOG_TAG] } });
   if (!res.ok) throw new ApiError(res.status, `GET ${path} failed with ${res.status}`);
   return res.json() as Promise<T>;
 }

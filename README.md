@@ -109,6 +109,16 @@ Check the API is up and connected to the database: <http://localhost:4000/health
 
 Testimonials: there is no admin screen for reviews yet. Add them in Prisma Studio and set `approved = true`.
 
+## Posting items (admin)
+
+- Log in at `/admin` with the `ADMIN_EMAIL` / `ADMIN_PASSWORD` account created by `npm run seed`.
+- **+ Add item** posts an item that goes live straight away (or untick "Publish now" to park it in Review).
+- Items sent by the public through `/sell` arrive as **Pending** and only appear on the site after you tap
+  **Approve** in the Review tab. This is by design.
+- Every admin change calls the website's `/api/revalidate` route (authorised with the admin token), which
+  clears the cached catalogue so the change shows on the homepage, listings, search and filters immediately.
+- All `/admin/*` API routes require the admin token; visitors get `401`.
+
 ## Useful commands
 
 ```powershell
